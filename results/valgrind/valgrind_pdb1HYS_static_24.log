@@ -1,0 +1,36 @@
+==87308== Cachegrind, a cache and branch-prediction profiler
+==87308== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.
+==87308== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==87308== Command: ./build_vg/spmv --mode omp --matrix data/pdb1HYS.mtx --threads 24 --schedule static --chunk 0 --repeat 1
+==87308== 
+--87308-- warning: L3 cache found, using its data for the LL simulation.
+--87308-- warning: specified LL cache: line_size 64  assoc 11  total_size 37,486,592
+--87308-- warning: simulated LL cache: line_size 64  assoc 18  total_size 37,748,736
+==87308== brk segment overflow in thread #1: can't grow to 0x530d000
+==87308== (see section Limitations in user manual)
+==87308== NOTE: further instances of this message will not be shown
+Matrix: pdb1HYS.mtx  Mode=omp  Repeat=1
+Threads=24  Schedule=static  Requested chunk=0
+Loaded reference: results/ref/pdb1HYS.mtx.ref
+Real chunk used: 1
+Max abs diff seq vs omp = 0.000000000000000
+==87308== 
+==87308== I   refs:      8,569,530,085
+==87308== I1  misses:            3,302
+==87308== LLi misses:            3,213
+==87308== I1  miss rate:          0.00%
+==87308== LLi miss rate:          0.00%
+==87308== 
+==87308== D   refs:      2,678,066,323  (1,897,401,669 rd   + 780,664,654 wr)
+==87308== D1  misses:       25,975,180  (   20,155,056 rd   +   5,820,124 wr)
+==87308== LLd misses:       10,414,902  (    4,985,214 rd   +   5,429,688 wr)
+==87308== D1  miss rate:           1.0% (          1.1%     +         0.7%  )
+==87308== LLd miss rate:           0.4% (          0.3%     +         0.7%  )
+==87308== 
+==87308== LL refs:          25,978,482  (   20,158,358 rd   +   5,820,124 wr)
+==87308== LL misses:        10,418,115  (    4,988,427 rd   +   5,429,688 wr)
+==87308== LL miss rate:            0.1% (          0.0%     +         0.7%  )
+==87308== 
+==87308== Branches:      1,638,931,939  (1,619,152,473 cond +  19,779,466 ind)
+==87308== Mispredicts:      83,181,048  (   74,417,698 cond +   8,763,350 ind)
+==87308== Mispred rate:            5.1% (          4.6%     +        44.3%   )

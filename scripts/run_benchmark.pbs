@@ -1,0 +1,119 @@
+#!/bin/bash
+#PBS -N spmv_benchmark
+#PBS -o spmv_benchmark.out
+#PBS -e spmv_benchmark.err
+#PBS -q short_cpuQ
+#PBS -l walltime=02:00:00
+#PBS -l select=1:ncpus=96:mem=8gb
+
+# =============================================================
+#  SpMV Benchmark (PBS version)
+# =============================================================
+
+# 0. load modules
+module purge
+module load numactl
+module load gcc91
+module load cmake-3.15.4
+# module load make-4.3
+
+# 1. Move to the directory from which qsub was launched
+cd "$PBS_O_WORKDIR" || { echo "ERROR: cannot cd to PBS_O_WORKDIR"; exit 1; }
+
+echo "Working directory: $(pwd)"
+echo "Node: $(hostname)"
+echo "Date: $(date)"
+echo ""
+
+echo "=== Hardware information ==="
+lscpu
+echo ""
+numactl --hardware
+echo ""
+
+# 2. OMP settings
+# binding threads to CPUs
+export OMP_PROC_BIND=true
+# one thread per core
+export OMP_PLACES=cores
+
+# 3. Compile the project
+echo "=== Compiling project ==="
+mkdir -p build
+cd build || { echo "ERROR: cannot cd to /build"; exit 1; }
+cmake .. >/dev/null
+make -j >/dev/null
+cd "$PBS_O_WORKDIR" || { echo "ERROR: cannot cd to PBS_O_WORKDIR"; exit 1; }
+
+EXEC="./build/spmv"
+
+if [[ ! -f "$EXEC" ]]; then
+    echo "ERROR: compilation failed, executable not found."
+    exit 1
+fi
+echo "Executable found: $EXEC"
+echo ""
+
+# 4. Prepare CSV output directory
+OUT_DIR="results/csv"
+mkdir -p "$OUT_DIR"
+
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+CSV_OUT="$OUT_DIR/benchmark_$TIMESTAMP.csv"
+
+echo "Saving results into: $CSV_OUT"
+echo "matrix,mode,threads,schedule,chunk,repeat,p90,max_diff" > "$CSV_OUT"
+
+# 5. Benchmark parameters
+MATRICES=(
+"1138_bus.mtx"
+"bcsstk25.mtx"
+"G3_circuit.mtx"
+"nlpkkt120.mtx"
+"pdb1HYS.mtx"
+)
+
+DATA_DIR="data"
+
+THREADS=(1 2 4 8 12 16 24 48 96)
+SCHEDULES=("static" "dynamic" "guided")
+CHUNKS=(0 1 4 16)
+REPEAT=10
+
+# 6. Main benchmark loop
+echo "=== Starting benchmark ==="
+
+for MAT in "${MATRICES[@]}"; do
+    MATRIX_PATH="$DATA_DIR/$MAT"
+
+    if [[ ! -f "$MATRIX_PATH" ]]; then
+        echo "WARNING: Matrix not found: $MATRIX_PATH"
+        continue
+    fi
+
+    echo ">>> Matrix: $MAT"
+
+    # Sequential baseline
+    $EXEC --mode seq --matrix "$MATRIX_PATH" --repeat "$REPEAT" --csv "$CSV_OUT"
+
+    # Parallel runs
+    for T in "${THREADS[@]}"; do
+        export OMP_NUM_THREADS=$T
+        for S in "${SCHEDULES[@]}"; do
+            for C in "${CHUNKS[@]}"; do
+                echo "  OMP run: threads=$T schedule=$S chunk=$C"
+                $EXEC --mode omp --matrix "$MATRIX_PATH" \
+                      --threads "$T" \
+                      --schedule "$S" \
+                      --chunk "$C" \
+                      --repeat "$REPEAT" \
+                      --csv "$CSV_OUT"
+            done
+        done
+    done
+
+    echo ""
+done
+
+echo "=== Benchmark completed ==="
+echo "Output written to: $CSV_OUT"

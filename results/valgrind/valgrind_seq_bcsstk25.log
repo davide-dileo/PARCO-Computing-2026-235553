@@ -1,0 +1,32 @@
+==87306== Cachegrind, a cache and branch-prediction profiler
+==87306== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.
+==87306== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==87306== Command: ./build_vg/spmv --mode seq --matrix data/bcsstk25.mtx --repeat 1
+==87306== 
+--87306-- warning: L3 cache found, using its data for the LL simulation.
+--87306-- warning: specified LL cache: line_size 64  assoc 11  total_size 37,486,592
+--87306-- warning: simulated LL cache: line_size 64  assoc 18  total_size 37,748,736
+Matrix: bcsstk25.mtx  Mode=seq  Repeat=1
+Saved reference: results/ref/bcsstk25.mtx.ref
+Real chunk used: 0
+Correctness check: NA (seq mode)
+==87306== 
+==87306== I   refs:      491,901,342
+==87306== I1  misses:          2,917
+==87306== LLi misses:          2,507
+==87306== I1  miss rate:        0.00%
+==87306== LLi miss rate:        0.00%
+==87306== 
+==87306== D   refs:      154,458,276  (108,355,484 rd   + 46,102,792 wr)
+==87306== D1  misses:      1,096,134  (    751,347 rd   +    344,787 wr)
+==87306== LLd misses:        269,941  (     11,070 rd   +    258,871 wr)
+==87306== D1  miss rate:         0.7% (        0.7%     +        0.7%  )
+==87306== LLd miss rate:         0.2% (        0.0%     +        0.6%  )
+==87306== 
+==87306== LL refs:         1,099,051  (    754,264 rd   +    344,787 wr)
+==87306== LL misses:         272,448  (     13,577 rd   +    258,871 wr)
+==87306== LL miss rate:          0.0% (        0.0%     +        0.6%  )
+==87306== 
+==87306== Branches:       94,622,866  ( 93,410,789 cond +  1,212,077 ind)
+==87306== Mispredicts:     5,174,598  (  4,638,357 cond +    536,241 ind)
+==87306== Mispred rate:          5.5% (        5.0%     +       44.2%   )
